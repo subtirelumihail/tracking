@@ -10,7 +10,7 @@ class Tracking extends CI_Controller {
 	var $json;
 	var $IP;
 
-	public function guint($eventer = false){
+	public function guint(){
 		$this->navigator = file_get_contents("php://input");
 		$this->json 	 = json_decode($this->navigator);
 		$this->navagent  = $this->json->navigator->userAgent;
@@ -38,13 +38,13 @@ class Tracking extends CI_Controller {
 	}
 
 	public function setEvent(){
-		$this->guint(true);
+		$this->guint();
 
 		$user = $this->USER;
 
-		$insertSQL = "INSERT IGNORE INTO $this->eventTable(idUSER, eventName, eventVals) VALUES(?,?,?)";
-		$qinsert   = $this->db->query($insertSQL, array($user['id'], $this->json->Evnt, $this->json->EvntVal));
+		$insertSQL = "INSERT IGNORE INTO $this->eventTable(idUSER, trackName, eventName, eventVals) VALUES(?,?,?,?)";
+		$qinsert   = $this->db->query($insertSQL, array($user['id'], $this->json->Track, $this->json->Evnt, $this->json->EvntVal));
 
-		var_dump($test);
+		echo $this->db->insert_id();
 	}
 }

@@ -2,12 +2,11 @@ function Tracking(){}
 
 Tracking.prototype.config = function(conf){
 	this.Name 	   = conf.trackName;
-	this.userLink  = conf.userLink;
 	this.eventLink = conf.eventLink;
 
 	this.getNavigator();
 	this.catchErrors();
-}
+} 
 
 
 Tracking.prototype.getNavigator = function(){
@@ -21,6 +20,7 @@ Tracking.prototype.e = function(name, values, callback){
 	this.EventName = name;
 	this.EventValues = values;
 	this.EventCallback = callback;
+	this.EventID  = '';
 
 	this.sendEvent();
 }
@@ -28,20 +28,36 @@ Tracking.prototype.e = function(name, values, callback){
 Tracking.prototype.sendEvent = function(data){
 	/*Save the event to the DB*/
 	this.EventArr = {
+		'Track':this.Name,
 		'Evnt':this.EventName,
-		'EvntVal':this.EventValues,
+		'EvntVal': typeof this.EventValues !== 'string' ? JSON.stringify(this.EventValues) : this.EventValues,
 		'navigator': this._navigator
 	} 
 
-	$.post( _track.eventLink , JSON.stringify(this.EventArr), this.EventCallback, 'json' );
+	$.ajax({
+	  type: 'POST',
+	  url: _track.eventLink,
+	  data: JSON.stringify(this.EventArr),
+	  success: function(data){
+			_track.EventID = data;
+	  },
+	  dataType: 'json',
+	  async:false
+	});
 }
 
 
 Tracking.prototype.catchErrors = function(){
 	window.onerror = function (errorMsg, url, lineNumber) {
 	 	var msg = '_Error';
-	 	var Val = 'Line number '+lineNumber+': '+errorMsg;
-	 	_track.e(msg, Val);
+	 	var errData = {
+	 		'errUrl:'	 : url,
+	 		'lineNumber' : lineNumber,
+	 		'errorMsg'	 : errorMsg,
+	 		'LastEvent'	 : _track.EventName,
+	 		'LastEventID': _track.EventID
+	 	}
+	 	_track.e(msg, JSON.stringify(errData));
 	}
 }
 
@@ -49,7 +65,5 @@ var _track = new  Tracking();
 
 _track.config({
 	trackName: 'Cod validation',
-	userLink:  root_path+'tracking/guint',
 	eventLink: root_path+'tracking/setEvent'
 })
-
